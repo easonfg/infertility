@@ -1,0 +1,26 @@
+{
+    "id": "EF358C39",
+    "path": "~/Desktop/egg_myriad/88_infertility_samples/hormone_analysis/testosterone.quartile.ana.R",
+    "project_path": "testosterone.quartile.ana.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1617304552784.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "210,0",
+        "scrollLine": "79",
+        "marks": "<:199,16\n>:199,16"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1617326790,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1617326790266,
+    "read_only": false,
+    "read_only_alternatives": []
+}

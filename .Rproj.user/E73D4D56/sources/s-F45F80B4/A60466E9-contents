@@ -1,0 +1,34 @@
+library(compareGroups)
+
+mat = sub_input_total_0_1[, colnames(sub_input_total_0_1)[!colnames(sub_input_total_0_1) %in% c('age', 'BMI')]]
+mat[is.na(mat)] <- 'NA'
+# mat[mat == 1] <- 'TRUE'
+# mat[mat == 0] <- 'FALSE'
+
+# sob.total = 8221 + 2890+1375+337
+# mat$SHORTNESS_OF_BREATH = c(rep('No', (8222/sob.total*nrow(mat))), rep('Mild', (2891/sob.total*nrow(mat))), rep('Significant', (1375/sob.total*nrow(mat))), 
+#                                                                                                               rep('Severe', (338/sob.total*nrow(mat))))
+# mat$SHORTNESS_OF_BREATH = factor(mat$SHORTNESS_OF_BREATH, levels = c('No', 'Mild', 'Significant', 'Severe'))
+# 
+# fatigue.total = 8221 + 2890+1375+337
+# mat$SHORTNESS_OF_BREATH = c(rep('No', (8222/sob.total*nrow(mat))), rep('Mild', (2891/sob.total*nrow(mat))), rep('Significant', (1375/sob.total*nrow(mat))), 
+#                                                                                                             rep('Severe', (338/sob.total*nrow(mat))))
+
+mat = data.frame(sapply(mat, function(x) as.factor(x)), Age = sub_input_total_0_1$age, BMI = sub_input_total_0_1$BMI)
+
+mat = mat %>% select(-c('GENDER_1', 'GENDER_2', 'GENDER_3', 'HOARSE_VOICE', 'CHILLS_OR_SHIVERS', 'EYE_SORENESS', 'DIZZY_LIGHT_HEADED', 'NAUSEA',
+                        'RED_WELTS_ON_FACE_OR_LIPS', 'BLISTERS_ON_FEET', 'TAKES_BLOOD_PRESSURE_MEDICATIONS_PRIL', 'TAKES_ASPIRIN', 'TAKES_BLOOD_PRESSURE_MEDICATIONS_SARTAN',
+                        'RACE_IS_US_INDIAN_NATIVE', 'RACE_IS_US_ASIAN','RACE_IS_US_BLACK','RACE_IS_US_HAWAIIAN_PACIFIC','RACE_IS_US_WHITE',
+                        'SHORTNESS_OF_BREATH_no', 'SHORTNESS_OF_BREATH_mild', 'SHORTNESS_OF_BREATH_significant', 'SHORTNESS_OF_BREATH_severe',
+                        'FATIGUE_no', 'FATIGUE_mild', 'FATIGUE_severe'))
+
+colnames(mat) = gsub('in_hospital', 'inhospital', colnames(mat))
+colnames(mat) = gsub('GENDER_0', 'GENDER', colnames(mat))
+# colnames(mat) = gsub('_', ' ', colnames(mat))
+
+comp.res = compareGroups(inhospital~., data = mat)
+
+compareg = createTable(comp.res, show.p.overall = F)
+compareg
+export2xls(compareg, 'comparegroups.pdf')
+missingg = missingTable(comp.res)
