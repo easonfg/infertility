@@ -251,6 +251,7 @@ auc(roc(fertile.data$Fertile, scores))
 
 plot.data = rownames_to_column(coef.means)[-1,]
 plot.data$rowname = factor(plot.data$rowname, levels = plot.data[order(plot.data$coef_means), 'rowname'])
+plot.data$rowname = factor(plot.data$rowname, levels = plot.data[order(abs(plot.data$coef_means)), 'rowname'])
 ggplot(plot.data, aes(x = rowname, y = coef_means))+
   geom_bar(stat = 'Identity') +
   theme_bw()

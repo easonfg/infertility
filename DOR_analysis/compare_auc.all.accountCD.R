@@ -11,6 +11,7 @@ library(aod)
 
 org.data = read.csv('../cleaned.infertile.data.csv')
 org.data$Infertility.diagnosis = toupper(org.data$Infertility.diagnosis)
+# org.data = org.data[org.data$CD.of.blood.draw == 'R',]
 
 org.data = org.data[-grep('DOR, ENDO', org.data$Infertility.diagnosis), ]
 
@@ -64,9 +65,12 @@ for (col in colnames(fertile.data)){
 fertile.data = Filter(function(x)(length(unique(x))>1), fertile.data)
 
 ### load coefficients
-coef.means = read.csv('cytokines_coef.csv')
+coef.means = read.csv('cytokines_coef_accountCD.csv')
 amh.afc.coef.means = read.csv('AMH_AFC.csv')
 
+coef.means = coef.means[-grep('CD_of_', coef.means$names),]
+
+coef.means
 get_auc = function(score.coef){
   cyto.scores = as.matrix(fertile.data[,score.coef$names])%*% as.matrix(score.coef$coef_means)%>% as.vector()
   # scores = fertile.data[,rownames(score.coef)]%>%rowSums()
@@ -82,13 +86,15 @@ coef.means
 # sub.coef = coef.means[coef.means$freq > 3,]
 sub.coef = coef.means[coef.means$freq > 0,]
 
-score.coef = sub.coef[-c(1,2),,drop = F]
+score.coef = sub.coef[-c(1,2),,drop = F] # sans age bmi
 get_auc(score.coef)
-score.coef = sub.coef[-c(2),,drop = F]
+score.coef = sub.coef[-c(2),,drop = F] # keep age
+# score.coef
 get_auc(score.coef)
-score.coef = sub.coef[-c(1),,drop = F]
+score.coef = sub.coef[-c(1),,drop = F] # keep bmi
+score.coef
 get_auc(score.coef)
-score.coef = sub.coef[,,drop = F]
+score.coef = sub.coef[,,drop = F] # all
 score.coef
 get_auc(score.coef)
 # score.coef = sub.coef
@@ -102,14 +108,23 @@ score.coef
 
 colnames(amh.afc.coef.means)[1] = 'names'
 hormone.score.coef = amh.afc.coef.means[c(2,3,4,5),,drop = F] ## all
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(2,4),,drop = F] #afc, amh
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(2,3,4),,drop = F] #afc, amh, age
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(2,3,5),,drop = F] #afc, amh, bmi
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(4),,drop = F] # amh
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(2),,drop = F] # afc
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(3),,drop = F] # age
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(3,5),,drop = F] # age, bmi
+get_auc(hormone.score.coef)
 hormone.score.coef = amh.afc.coef.means[c(5),,drop = F] # bmi
+get_auc(hormone.score.coef)
 # hormone.score.coef = coef.means[-c(1,5),,drop = F]
 hormone.score.coef
 scores = as.matrix(fertile.data[,hormone.score.coef$names])%*% as.matrix(hormone.score.coef$coef_means)%>% as.vector()
@@ -129,9 +144,33 @@ plot.test = plot(roc(fertile.data$Fertile, as.matrix(fertile.data[,amh.afc.coef.
                  print.auc = F, col = "green", lty = 2, print.auc.y = .4,  add = TRUE)
 plot.test = plot(roc(fertile.data$Fertile, as.matrix(fertile.data[,amh.afc.coef.means[c(3),,drop = F]$names])%*% as.matrix(amh.afc.coef.means[c(3),,drop = F]$coef_means)%>% as.vector()),
                  print.auc = F, col = "blue",print.auc.y = .4,  add = TRUE)
-legend("bottomright", (c('Cytokines+Age+BMI','AMH+AFC+Age+BMI',  'Age')), lty=c(1,2,1), lwd = 3,
+legend("bottomright", (c('Cytokines+Age+BMI','AMH+AFC+Age+BMI',  'Age')), lty=1, lwd = 3,
        bty="n", col = c('red', 'green', 'blue'))
-# dev.off()
+#dev.off()
+
+graph.data = coef.means
+print(
+  ggplot(graph.data, aes(coef_means, freq, label = names)) +
+    # ggplot(graph.data, aes(freq, coef_means)) +
+    geom_point(aes(color = abs(coef_means))) +
+    # geom_text(aes(label=names),size = 3, hjust=-0.5, vjust=0.5) +
+    # geom_text(aes(label=ifelse(freq>75,as.character(names),'')),size = 3, hjust=-0.5, vjust=0.5) +
+    geom_text_repel() +
+    # nudge_y       = 32 - subset(graph.data, freq > 25)$freq,
+    # size          = 4,
+    # box.padding   = 1.5,
+    # point.padding = 0.5,
+    # force         = 100,
+    # segment.size  = 0.2,
+    # segment.color = "grey50",
+    # direction     = "x") +
+    xlab("Average Coefficients") + 
+    ylab("Frequencies") +
+    labs(color='Absolute Average\ 
+         Coefficients') + ## legend title
+    ggtitle('DOR Variables')+
+    theme_bw()
+)
 
 plot.data = coef.means
 plot.data

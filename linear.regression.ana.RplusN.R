@@ -9,14 +9,15 @@ library(aod)
 
 org.data = read.csv('cleaned.infertile.data.csv')
 org.data$Infertility.diagnosis = toupper(org.data$Infertility.diagnosis)
+org.data = org.data[-grep('DOR, ENDO', org.data$Infertility.diagnosis), ]
 
 LOD = org.data[org.data$X == 'LOD', , drop = F]
 
 
 all.res = data.frame()
 # for (diag in c('RPL', 'DOR', 'PCOS', 'ENDOMETRIOSIS', 'UNEXPLAINED')){
-# for (diag in c( 'DOR', 'PCOS', 'ENDOMETRIOSIS')){
-for (diag in c( 'DOR')){
+for (diag in c( 'DOR', 'PCOS', 'ENDOMETRIOSIS')){
+# for (diag in c( 'DOR')){
   
   ### filter out missing values
   infertility.data = org.data[org.data$Missing != 1,]
@@ -74,7 +75,7 @@ for (diag in c( 'DOR')){
   fertile.data = Filter(function(x)(length(unique(x))>1), fertile.data)
   
   res = sapply(colnames(fertile.data)[5:ncol(fertile.data)], function(x){
-    lm.model = lm(as.formula(paste(x, '~Fertile + Age + BMI + Cycle.Date + BMI')), data = fertile.data)
+    lm.model = lm(as.formula(paste(x, '~Fertile + Age  + Cycle.Date + BMI')), data = fertile.data)
     # lm.model = lm(as.formula(paste(x, '~Fertile + Age + Cycle.Date')), data = fertile.data)
     # lm.model = lm(as.formula(paste(x, '~Fertile + Age')), data = fertile.data)
     temp.wt.res = wald.test(b=coef(lm.model), Sigma=vcov(lm.model), Terms=c(2))
@@ -134,11 +135,11 @@ print(gg.res)
 infertility.data = org.data[org.data$Missing != 1,]
 
 ### retain only values from R collection date
-infertility.data = infertility.data[grep('R$', infertility.data$CD.of.blood.draw),]
+# infertility.data = infertility.data[grep('R$', infertility.data$CD.of.blood.draw),]
 # infertility.data = infertility.data[grep('R', infertility.data$CD.of.blood.draw),]
 
 ### remove NA row
-infertility.data = infertility.data[!is.na(infertility.data$X),]
+infertility.data = infertility.data[!is.na(infertility.data$Fertile),]
 
 ### extract cytokines data
 cytokines.data = infertility.data[grep('IL8', colnames(infertility.data)):grep('CSF1', colnames(infertility.data))]
@@ -146,8 +147,9 @@ cytokines.data
 
 ### turn all values lower than LOD to LOD
 for (col.i in colnames(cytokines.data)){
+  print(col.i)
   LOD_x = as.numeric(LOD[col.i])
-  cytokines.data[cytokines.data[,col.i] < LOD_x, col.i] = LOD_x
+  cytokines.data[which(cytokines.data[,col.i] < LOD_x), col.i] = LOD_x
 }
 
 fertile.data = bind_cols(infertility.data[, c('Fertile', 'Infertility.diagnosis')], cytokines.data)
@@ -168,10 +170,10 @@ for (diag_i in unique(all.res$diag)){
   
   sub.plot.data.FERTILE = long.fertile.data[grep('FERTILE', long.fertile.data$Infertility.diagnosis),]
   sub.plot.data.FERTILE = sub.plot.data.FERTILE[sub.plot.data.FERTILE$cytokines %in% unique.cyto ,]
-  sub.plot.data.FERTILE$Infertility.diagnosis = 'FERTILE'
+  sub.plot.data.FERTILE$Infertility.diagnosis = 'Control'
   
   sub.plot.data = bind_rows(sub.plot.data.infertile, sub.plot.data.FERTILE)
-  sub.plot.data$Infertility.diagnosis = factor(sub.plot.data$Infertility.diagnosis, levels = c('FERTILE', diag_i))
+  sub.plot.data$Infertility.diagnosis = factor(sub.plot.data$Infertility.diagnosis, levels = c('Control', diag_i))
   
   cyto.chunks.diag = split(unique(sub.plot.data$cytokines), ceiling(seq_along(unique(sub.plot.data$cytokines))/20))
   
@@ -200,10 +202,10 @@ for (diag_i in unique(all.res$diag)){
   
   sub.plot.data.FERTILE = long.fertile.data[grep('FERTILE', long.fertile.data$Infertility.diagnosis),]
   sub.plot.data.FERTILE = sub.plot.data.FERTILE[sub.plot.data.FERTILE$cytokines %in% unique.cyto ,]
-  sub.plot.data.FERTILE$Infertility.diagnosis = 'FERTILE'
+  sub.plot.data.FERTILE$Infertility.diagnosis = 'Control'
   
   sub.plot.data = bind_rows(sub.plot.data.infertile, sub.plot.data.FERTILE)
-  sub.plot.data$Infertility.diagnosis = factor(sub.plot.data$Infertility.diagnosis, levels = c('FERTILE', diag_i))
+  sub.plot.data$Infertility.diagnosis = factor(sub.plot.data$Infertility.diagnosis, levels = c('Control', diag_i))
   
   cyto.chunks.diag = split(unique(sub.plot.data$cytokines), ceiling(seq_along(unique(sub.plot.data$cytokines))/20))
   

@@ -15,6 +15,7 @@ org.data = read.csv('../cleaned.infertile.data.csv')
 org.data$Infertility.diagnosis = toupper(org.data$Infertility.diagnosis)
 
 org.data = org.data[-grep('DOR, ENDO', org.data$Infertility.diagnosis), ]
+org.data = org.data[org.data$CD.of.blood.draw == 'R', ]
 
 LOD = org.data[org.data$X == 'LOD', , drop = F]
 
@@ -22,7 +23,7 @@ all.res = data.frame()
 # for (diag in c('RPL', 'DOR', 'PCOS', 'ENDOMETRIOSIS', 'UNEXPLAINED')){
 # for (diag in c('DOR', 'PCOS', 'ENDOMETRIOSIS', 'UNEXPLAINED')){
 for (diag in c('DOR')){
-# for (diag in c('ENDOMETRIOSIS')){
+  # for (diag in c('ENDOMETRIOSIS')){
   
   ### filter out missing values
   infertility.data = org.data[org.data$Missing != 1,]
@@ -79,8 +80,8 @@ for (diag in c('DOR')){
   
   
   ## remove columsn with single unique value ##
-  fertile.data = Filter(function(x)(length(unique(x))>1), fertile.data)
-  str(fertile.data)
+  # fertile.data = Filter(function(x)(length(unique(x))>1), fertile.data)
+  # str(fertile.data)
   
   lm.model = lm(Fertile~AMH + BMI + Age, data = fertile.data)
   lm.model = lm(AMH~Fertile + BMI + Age, data = fertile.data)
@@ -97,8 +98,8 @@ for (diag in c('DOR')){
   
   # cv.amh <- cv.glmnet(as.matrix(fertile.data[,c('AMH', 'AFC', 'Age', 'BMI')]),
   cv.amh <- cv.glmnet(as.matrix(fertile.data[,c('AMH', 'AFC', 'Age', 'BMI')]),
-                  fertile.data$Fertile,
-                  family = "binomial", nfold = nrow(fertile.data), type.measure = "auc", paralle = TRUE)
+                      fertile.data$Fertile,
+                      family = "binomial", nfold = nrow(fertile.data), type.measure = "auc", paralle = TRUE)
   
   # plot(cv.amh)
   
@@ -133,9 +134,9 @@ for (diag in c('DOR')){
     for (j in 1:10){
       #print(paste('I: ', all.rep, 'J: ', j))
       print(paste('I: ', all.rep))
-      md3cv <- cv.glmnet(as.matrix(scale(fertile.data[,c(5:ncol(fertile.data))])),
+      md3cv <- cv.glmnet(as.matrix(scale(fertile.data[,c(4:ncol(fertile.data))])),
                          fertile.data$Fertile,
-                         family = "binomial", nfold = 3, type.measure = "auc", paralle = TRUE)
+                         family = "binomial", nfold = 3, type.measure = "auc", paralle = TRUE, alpha = 0.8)
       # plot(md3cv)
       
       return_features = function(coeff){
@@ -152,6 +153,7 @@ for (diag in c('DOR')){
       
       res.coef = c(res.coef, return_features(coef(md3cv, s = 'lambda.min'))$name)
       max.auc = c(max.auc, max(md3cv$cvm))
+      print(return_features(coef(md3cv, s = 'lambda.min'))$name)
       # print(res.coef)
       # print(max.auc)
       # res.coef$name
@@ -247,7 +249,7 @@ ggplot(plot.data, aes(x = rowname, y = coef_means))+
   geom_bar(stat = 'Identity') +
   theme_bw()
 
-# write.csv(graph.data, 'cytokines_coef.csv')
+write.csv(graph.data, 'cytokines_coef_onlyR.csv')
 
 
 ## sub cytokines scores
